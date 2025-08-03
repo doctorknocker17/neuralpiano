@@ -1,6 +1,8 @@
 # [WIP] Neural Piano
 ## Hi-Fi neural MIDI piano synthesizer and MIDI renderer
 
+<img width="1024" height="1024" alt="Neural-Piano-Artwork" src="https://github.com/user-attachments/assets/a3d214c0-f88d-4581-9d29-fc26aeec04f8" />
+
 ***
 
 ## Installation

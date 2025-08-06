@@ -2,7 +2,9 @@ seed_everything: 2434
 trainer:
   logger: true
   enable_checkpointing: true
+  gradient_clip_val: 0.5
   gradient_clip_algorithm: norm
+  #accumulate_grad_batches: 10
   num_nodes: 1
   precision: 16-mixed
   devices: 1
@@ -19,30 +21,38 @@ trainer:
 model:
   class_path: lightning.DiffusionLM
   init_args:
-    num_emb: 901
+    num_emb: 687
     output_dim: 128
     emb_dim: 768
-    dim_feedforward: 3072
+    dim_feedforward: 1536
     nhead: 8
     num_layers: 8
     cfg_dropout: 0.1
-    cfg_weighting: 5.0
+    cfg_weighting: 2.0
     with_context: true
     dropout: 0.1
     layer_norm_eps: 1.0e-05
     norm_first: true
 
     # --- STFT / Mel settings for 44 100 Hz, 128-band BigVGAN ---
-    sample_rate: 44100         # BigVGAN sampling rate
-    n_fft: 2048                # FFT size for mel computation
-    win_length: 2048           # Window length
-    hop_length: 512            # Hop (frame) shift
-    f_min: 0.0                 # Lower mel cutoff
-    f_max: 22050.0             # Upper mel cutoff (sr/2)
-    n_mels: 128                # Number of mel channels (128-band)
-    normalize: true           # Scale mel to [0,1] or similar
-    max_input_length: 1326
-    max_output_length: 442     # = (segment_length / hop_length) + 1
+    #sample_rate: 44100         # BigVGAN sampling rate
+    #n_fft: 2048                # FFT size for mel computation
+    #win_length: 2048           # Window length
+    #hop_length: 512            # Hop (frame) shift
+    #f_min: 0.0                 # Lower mel cutoff
+    #f_max: 22050.0             # Upper mel cutoff (sr/2)
+    #n_mels: 128                # Number of mel channels (128-band)
+    #normalize: true           # Scale mel to [0,1] or similar
+    max_input_length: 896
+    max_output_length: 257     # = (segment_length / hop_length) + 1
+
+    #pad: 0
+    #power: 1.0
+    #normalized: false
+    #wkwargs: null
+    #center: true
+    #pad_mode: reflect
+    #onesided: true
 
 data:
   class_path: lightning.data.ConcatData
@@ -53,7 +63,7 @@ data:
 
     # --- Data loader segment length at 44.1 kHz ---
     sample_rate: 44100
-    segment_length: 225792    # e.g., ~5.12 s @ 44 100 Hz (81920 at 16 kHz → 225792)
+    segment_length: 131072    # e.g., ~5.12 s @ 44 100 Hz (81920 at 16 kHz → 225792)
 
     musicnet_path: null
     maestro_path: /home/ubuntu/MAESTRO/maestro-v3.0.0/

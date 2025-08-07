@@ -8,8 +8,8 @@ from typing import Tuple, Union, Optional, List, Dict, Any
 from note_seq import NoteSequence
 from tqdm import tqdm
 
-from preprocessor.event_codec import Codec
-from preprocessor.preprocessor import preprocess
+from event_codec import Codec
+from preprocessor import preprocess
 
 
 class Base(Dataset):

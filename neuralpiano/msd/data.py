@@ -3,8 +3,8 @@ import torch
 from torch.utils.data import DataLoader, ConcatDataset, default_collate, WeightedRandomSampler
 from torch.nn.utils.rnn import pad_sequence
 from itertools import chain
-from data.maestro import Maestro
-from preprocessor.event_codec import Codec
+from maestro import Maestro
+from event_codec import Codec
 
 
 def get_padding_collate_fn(output_size: int):

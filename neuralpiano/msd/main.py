@@ -3,8 +3,8 @@ from pytorch_lightning.cli import LightningCLI
 from pytorch_lightning.callbacks import ModelCheckpoint, ModelSummary
 from pytorch_lightning.strategies import DDPStrategy
 
-from lightning import DiffusionLM
-from lightning.data import ConcatData
+from diff import DiffusionLM
+from data import ConcatData
 
 torch.set_float32_matmul_precision('high')
 

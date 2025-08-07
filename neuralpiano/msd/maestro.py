@@ -4,7 +4,7 @@ import json
 import note_seq
 import multiprocessing
 from tqdm import tqdm
-from .common import Base
+from common import Base
 
 def _process_track(track_files):
     """Helper function for multiprocessing to process a single track."""

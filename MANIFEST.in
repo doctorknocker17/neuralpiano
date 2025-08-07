@@ -5,3 +5,4 @@ recursive-include neuralpiano/output_samples *
 recursive-include neuralpiano/seed_midis *
 recursive-include neuralpiano/msd *
 recursive-include neuralpiano/bigvgan *
+recursive-include neuralpiano/notebooks *

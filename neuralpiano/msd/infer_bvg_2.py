@@ -133,8 +133,8 @@ if __name__ == '__main__':
     if args.W is not None:
         model_configs['init_args']['cfg_weighting'] = args.W
 
-    module_path, class_name = model_configs['class_path'].rsplit('.', 1)
-    #module = import_module(module_path)
+    # module_path, class_name = model_configs['class_path'].rsplit('.', 1)
+    # module = import_module(module_path)
     module = import_module("diff")  # or the correct relative path
     model = getattr(module, "DiffusionLM").load_from_checkpoint(args.ckpt, **model_configs['init_args'])
 

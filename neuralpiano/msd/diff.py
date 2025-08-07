@@ -71,24 +71,6 @@ class DiffusionLM(pl.LightningModule):
         
         return -2.0 * torch.log(torch.tan(a * t + b))
 
-    def get_training_inputs(self, x: torch.Tensor, uniform: bool = False):
-        
-        N = x.shape[0]
-        
-        if uniform:
-            t = torch.linspace(0, 1, N).to(x.device)
-            
-        else:
-            t = x.new_empty(N).uniform_(0, 1)
-            
-        log_snr = self.get_log_snr(t)
-        alpha, var = log_snr2as(log_snr)
-        sigma = var.sqrt()
-        noise = torch.randn_like(x)
-        z_t = x * alpha[:, None, None] + sigma[:, None, None] * noise
-        
-        return z_t, t, noise
-
     def forward(self, midi: Tensor, seq_length=256, mel_context=None, wav_context=None, rescale=True, T=1000, verbose=True):
         if wav_context is not None:
             context = self.mel(wav_context)
@@ -157,15 +139,41 @@ class DiffusionLM(pl.LightningModule):
             
         return final
 
+    def get_training_inputs(self, x: torch.Tensor, uniform: bool = False):
+        
+        N = x.shape[0]
+        
+        if uniform:
+            t = torch.linspace(0, 1, N).to(x.device)
+            
+        else:
+            t = x.new_empty(N).uniform_(0, 1)
+
+        t = torch.nan_to_num(t, nan=0.0, posinf=0.0, neginf=0.0)
+        t = t.clamp(1e-5, 1 - 1e-5)
+            
+        log_snr = self.get_log_snr(t)
+        alpha, var = log_snr2as(log_snr)
+        sigma = var.sqrt()
+        noise = torch.randn_like(x)
+        z_t = x * alpha[:, None, None] + sigma[:, None, None] * noise
+        
+        return z_t, t, noise
+    
     def training_step(self, batch, batch_idx):
         midi, wav, *_ = batch
+        
         spec = self.mel(wav)
+
         if len(_) > 0:
             context = _[0]
             context = self.mel(context)
+
         else:
             context = None
+            
         N = midi.shape[0]
+        
         dropout_mask = spec.new_empty(N).bernoulli_(self.cfg_dropout).bool()
         z_t, t, noise = self.get_training_inputs(spec)
         
@@ -180,10 +188,25 @@ class DiffusionLM(pl.LightningModule):
         
         loss = F.l1_loss(noise_hat, noise)
 
-        values = {
-            'loss': loss,
-        }
-        self.log_dict(values, prog_bar=True, sync_dist=True)
+        self.log_dict({'loss': loss}, prog_bar=True, sync_dist=True)
+
+        '''
+        if batch_idx % 10 == 0:
+            values = {
+                'loss': loss,
+                'noise/min': torch.min(noise).item(),
+                'noise/mean': torch.mean(noise).item(),
+                'noise/max': torch.max(noise).item(),
+                'noise_hat/min': torch.min(noise_hat).item(),
+                'noise_hat/mean': torch.mean(noise_hat).item(),
+                'noise_hat/max': torch.max(noise_hat).item(),
+                'z_t/min': torch.min(z_t).item(),
+                'z_t/mean': torch.mean(z_t).item(),
+                'z_t/max': torch.max(z_t).item(),
+            }
+            self.log_dict(values, prog_bar=False, sync_dist=True)
+        '''
+        
         return loss
 
     def configure_optimizers(self):

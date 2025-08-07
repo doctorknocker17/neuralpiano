@@ -105,10 +105,10 @@ class Codec:
         offset += 3
         program_tokens = {p: p - note_seq.MIN_MIDI_PROGRAM + offset for p in range(
             note_seq.MIN_MIDI_PROGRAM, note_seq.MAX_MIDI_PROGRAM + 1)}
-        offset += note_seq.MAX_MIDI_PROGRAM - note_seq.MIN_MIDI_PROGRAM + 1
+        # offset += note_seq.MAX_MIDI_PROGRAM - note_seq.MIN_MIDI_PROGRAM + 1
         # mapping["program"] = program_tokens
-        drum_tokens = {p: p - note_seq.MIN_MIDI_PITCH +
-                       offset for p in range(note_seq.MIN_MIDI_PITCH, note_seq.MAX_MIDI_PITCH + 1)}
+        # drum_tokens = {p: p - note_seq.MIN_MIDI_PITCH +
+        #                offset for p in range(note_seq.MIN_MIDI_PITCH, note_seq.MAX_MIDI_PITCH + 1)}
         # mapping["drum"] = drum_tokens
 
         print("Size of vocabulary: {}".format(

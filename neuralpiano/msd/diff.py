@@ -1,8 +1,8 @@
 import pytorch_lightning as pl
-import torch_optimizer as optim
 import torch
 from torch import Tensor, nn
 import torch.nn.functional as F
+import torch_optimizer as optim
 import math
 from tqdm import tqdm
 from models.diff_decoder import MIDI2SpecDiff
@@ -62,7 +62,7 @@ class DiffusionLM(pl.LightningModule):
         self.mel = nn.Sequential(
             MelSpectrogram(),
             get_scaler()
-        ).to(memory_format=torch.channels_last)  # More efficient memory layout
+        )
 
     def get_log_snr(self, t):
         """Compute Cosine log SNR for a given time step."""
@@ -111,7 +111,10 @@ class DiffusionLM(pl.LightningModule):
 
         z_t = torch.randn(
             midi.shape[0], seq_length, self.output_dim, device=self.device)
-
+        
+        z_t = torch.nan_to_num(z_t, nan=0.0, posinf=0.0, neginf=0.0)
+        z_t = z_t.clamp(-1.0, 1.0)
+        
         dropout_mask = torch.tensor(
             [0] * midi.shape[0] + [1] * midi.shape[0]).bool().to(self.device)
         t = torch.broadcast_to(t, (midi.shape[0] * 2, T))
@@ -124,10 +127,17 @@ class DiffusionLM(pl.LightningModule):
             s_idx = t_idx - 1
             noise_hat = self.model(midi, z_t.repeat(
                 2, 1, 1), t[:, t_idx], context, dropout_mask=dropout_mask)
-
+           
+            noise_hat = torch.nan_to_num(noise_hat, nan=0.0, posinf=0.0, neginf=0.0)
+            noise_hat = noise_hat.clamp(-1.0, 1.0)
+            
             cond_noise_hat, uncond_noise_hat = noise_hat.chunk(2, dim=0)
             noise_hat = cond_noise_hat * self.cfg_weighting + \
                 uncond_noise_hat * (1 - self.cfg_weighting)
+            
+            # ADDED: Handle NaNs and clamp to [-1, 1] for stability
+            noise_hat = torch.nan_to_num(noise_hat, nan=0.0, posinf=0.0, neginf=0.0)
+            #noise_hat = noise_hat.clamp(-1.0, 1.0)
 
             noise_hat = noise_hat.clamp_(
                 (z_t - alpha[t_idx]) * var[t_idx].rsqrt(),
@@ -145,6 +155,9 @@ class DiffusionLM(pl.LightningModule):
 
         if rescale:
             final = self.mel[1].reverse(final)
+            # ADDED: Handle NaNs and clamp to [-1, 1] for final output
+            final = torch.nan_to_num(final, nan=0.0, posinf=0.0, neginf=0.0)
+            #final = final.clamp(-1.0, 1.0)
             
         return final
 
@@ -159,8 +172,20 @@ class DiffusionLM(pl.LightningModule):
         N = midi.shape[0]
         dropout_mask = spec.new_empty(N).bernoulli_(self.cfg_dropout).bool()
         z_t, t, noise = self.get_training_inputs(spec)
+        
+        z_t = torch.nan_to_num(z_t, nan=0.0, posinf=0.0, neginf=0.0)
+        z_t = z_t.clamp(-1.0, 1.0)
+        
         noise_hat = self.model(midi, z_t, t, context,
                                dropout_mask=dropout_mask)
+        
+        # ADDED: Handle NaNs and clamp to [-1, 1] for training stability
+        noise = torch.nan_to_num(noise, nan=0.0, posinf=0.0, neginf=0.0)
+        noise_hat = torch.nan_to_num(noise_hat, nan=0.0, posinf=0.0, neginf=0.0)
+        
+        noise = noise.clamp(-1.0, 1.0)
+        noise_hat = noise_hat.clamp(-1.0, 1.0)
+        
         loss = F.l1_loss(noise_hat, noise)
 
         values = {

@@ -92,5 +92,7 @@ class MelSpectrogram(nn.Module):
         
         # Normalize
         mel_spec = spectral_normalize_torch(mel_spec)
+
+        mel_spec = mel_spec.clamp(-12.0, 3.0)
         
         return mel_spec.transpose(-1, -2)

@@ -25,17 +25,14 @@ def log_snr2logas(log_snr: Tensor):
 
 
 class DiffusionLM(pl.LightningModule):
-    logsnr_min = -20
-    logsnr_max = 20
-
     def __init__(self,
-                 num_emb: int = 900,
+                 num_emb: int = 687,
                  output_dim: int = 128,
-                 max_input_length: int = 2048,
-                 max_output_length: int = 512,
-                 emb_dim: int = 512,
-                 dim_feedforward: int = 1024,
-                 nhead: int = 6,
+                 max_input_length: int = 896,
+                 max_output_length: int = 257,
+                 emb_dim: int = 768,
+                 dim_feedforward: int = 1536,
+                 nhead: int = 8,
                  head_dim: int = 64,
                  num_layers: int = 8,
                  cfg_dropout: float = 0.1,
@@ -63,13 +60,37 @@ class DiffusionLM(pl.LightningModule):
             MelSpectrogram(),
             get_scaler()
         )
-
+    
     def get_log_snr(self, t):
-        """Compute Cosine log SNR for a given time step."""
-        b = math.atan(math.exp(-0.5 * self.logsnr_max))
-        a = math.atan(math.exp(-0.5 * self.logsnr_min)) - b
-        
-        return -2.0 * torch.log(torch.tan(a * t + b))
+
+        t = torch.nan_to_num(t, nan=0.0, posinf=0.0, neginf=0.0)
+        # Clamp t to avoid boundaries
+        t = t.clamp(1e-4, 1.0 - 1e-4)
+    
+        # Precompute constants
+        logsnr_max = 20.0
+        logsnr_min = -20.0
+        b = math.atan(math.exp(-0.5 * logsnr_max))  # ~4.54e-5
+        a = math.atan(math.exp(-0.5 * logsnr_min)) - b  # ~π/2 - 4.54e-5
+    
+        angle = a * t + b
+    
+        # 🔑 Critical: clamp angle to (0, π/2)
+        min_angle = 1e-4
+        max_angle = math.pi / 2 - 1e-4
+        angle = angle.clamp(min_angle, max_angle)
+    
+        tan_val = torch.tan(angle)
+    
+        # Avoid overflow in log
+        tan_val = tan_val.clamp(1e-8, 1e8)  # reasonable dynamic range
+    
+        log_snr = -2.0 * torch.log(tan_val)
+    
+        # Final clamp to avoid extreme values that could destabilize training
+        log_snr = log_snr.clamp(-20.0, 20.0)
+    
+        return log_snr
 
     def forward(self, midi: Tensor, seq_length=256, mel_context=None, wav_context=None, rescale=True, T=1000, verbose=True):
         if wav_context is not None:
@@ -148,9 +169,6 @@ class DiffusionLM(pl.LightningModule):
             
         else:
             t = x.new_empty(N).uniform_(0, 1)
-
-        t = torch.nan_to_num(t, nan=0.0, posinf=0.0, neginf=0.0)
-        t = t.clamp(1e-5, 1 - 1e-5)
             
         log_snr = self.get_log_snr(t)
         alpha, var = log_snr2as(log_snr)
@@ -188,26 +206,23 @@ class DiffusionLM(pl.LightningModule):
         
         loss = F.l1_loss(noise_hat, noise)
 
-        self.log_dict({'loss': loss}, prog_bar=True, sync_dist=True)
+        self.log('loss', loss, prog_bar=True, sync_dist=True)
 
-        '''
-        if batch_idx % 10 == 0:
-            values = {
-                'loss': loss,
-                'noise/min': torch.min(noise).item(),
-                'noise/mean': torch.mean(noise).item(),
-                'noise/max': torch.max(noise).item(),
-                'noise_hat/min': torch.min(noise_hat).item(),
-                'noise_hat/mean': torch.mean(noise_hat).item(),
-                'noise_hat/max': torch.max(noise_hat).item(),
-                'z_t/min': torch.min(z_t).item(),
-                'z_t/mean': torch.mean(z_t).item(),
-                'z_t/max': torch.max(z_t).item(),
-            }
-            self.log_dict(values, prog_bar=False, sync_dist=True)
-        '''
-        
+        if batch_idx % 100 == 0:
+            self.log('mel/min', spec.min(), sync_dist=True)
+            self.log('mel/max', spec.max(), sync_dist=True)
+
+            if context is not None:
+                self.log('context/min', context.min(), sync_dist=True)
+                self.log('context/max', context.max(), sync_dist=True)
+                
         return loss
 
+    def on_train_epoch_end(self):
+        if self.current_epoch == 1 and not getattr(self, '_scaler_frozen', False):
+            self.mel[1].frozen = True
+            self._scaler_frozen = True
+            print(f"✅ Scaler frozen at epoch 1: min={self.mel[1].min.item():.3f}, max={self.mel[1].max.item():.3f}")
+    
     def configure_optimizers(self):
-        return optim.Adafactor(self.parameters(), lr=1e-5)
+        return optim.Adafactor(self.parameters(), lr=1e-3)

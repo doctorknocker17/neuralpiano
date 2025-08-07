@@ -3,11 +3,17 @@ from torch import nn
 from torch.nn import functional as F
 from torch.nn.init import xavier_uniform_
 
-from .utils import get_timing_signal_1d
-from .ar_decoder import DecoderLayer
-from .encoder import geglu, Encoder
-from .utils import sinusoidal
+from encoder import geglu, Encoder, MultiheadAttention
 
+from utils import get_timing_signal_1d, sinusoidal
+
+class DecoderLayer(nn.TransformerDecoderLayer):
+    def __init__(self, emb_dim, nhead, head_dim, dropout=0.1, **kwargs):
+        super().__init__(emb_dim, 1, dropout=dropout, batch_first=True,  **kwargs)
+        self.self_attn = MultiheadAttention(emb_dim, nhead, head_dim, dropout)
+        self.multihead_attn = MultiheadAttention(
+            emb_dim, nhead, head_dim, dropout)
+        self.linear1 = nn.Linear(emb_dim, 2 * self.linear1.weight.shape[0])
 
 class DiffusionEmbedding(nn.Module):
     def __init__(self, max_steps, emb_dim, cond_dim):

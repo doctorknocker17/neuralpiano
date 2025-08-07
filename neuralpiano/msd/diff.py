@@ -1,13 +1,20 @@
 import pytorch_lightning as pl
+
 import torch
 from torch import Tensor, nn
+
 import torch.nn.functional as F
-import torch_optimizer as optim
+
 import math
 from tqdm import tqdm
-from models.diff_decoder import MIDI2SpecDiff
-from .mel import MelSpectrogram
-from .scaler import get_scaler
+
+from diff_decoder import MIDI2SpecDiff
+
+from mel import MelSpectrogram
+
+from scaler import get_scaler
+
+#=============================================================
 
 def snr2as(snr: Tensor):
     snr_p1 = snr + 1

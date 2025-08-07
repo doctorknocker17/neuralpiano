@@ -3,7 +3,7 @@ import numpy as np
 import torch
 from typing import Any, Callable, MutableMapping, Optional, Sequence, Tuple, TypeVar
 
-from .event_codec import (
+from event_codec import (
     Codec,
     Event,
     NoteEventData,

@@ -4,8 +4,8 @@ import soundfile as sf
 import yaml
 from importlib import import_module
 import note_seq
-from preprocessor.event_codec import Codec
-from preprocessor.preprocessor import preprocess
+from event_codec import Codec
+from preprocessor import preprocess
 from tqdm import tqdm
 
 import matplotlib.pyplot as plt
@@ -13,14 +13,16 @@ import matplotlib.pyplot as plt
 import sys
 import os
 
-sys.path.append('/home/ubuntu/BigVGAN/')
-os.chdir('/home/ubuntu/BigVGAN/')
+from diff import DiffusionLM
+
+sys.path.append('/home/ubuntu/neuralpiano/neuralpiano/bigvgan/')
+os.chdir('/home/ubuntu/neuralpiano/neuralpiano/bigvgan/')
 
 import torch
 
 from bigvgan import BigVGAN
 
-os.chdir('/home/ubuntu/music-spectrogram-diffusion-pytorch/')
+os.chdir('/home/ubuntu/neuralpiano/neuralpiano/msd/')
 
 os.environ["HF_HUB_ENABLE_HF_TRANSFER"] = "1"
 
@@ -40,8 +42,6 @@ def diff_main(model, tokens, segment_length, spec_frames, with_context, T=1000, 
     output_specs = []
     zero_wav_context = torch.zeros(1, segment_length, device=device) if with_context else None
     mel_context = None
-
-    model.scheduler.set_timesteps(T)
 
     # 2. Generate token-conditioned mel-specs
     for token in tqdm(tokens, disable=not verbose):
@@ -75,13 +75,13 @@ def diff_main(model, tokens, segment_length, spec_frames, with_context, T=1000, 
 
     # --- CRITICAL FIX HERE ---
     # Transpose to match MelToDB.reverse expected input shape [B, n_mels, T]
-    output_tensor = output_tensor.transpose(1, 2)              # [1, n_mels, total_frames]
+    output_tensor = output_tensor.transpose(-1, -2)              # [1, n_mels, total_frames]
 
     # --- CRITICAL CHANGE HERE ---
     # Use the model's MelToDB `reverse` method to convert the diffusion model's [-1, 1] output
     # back to the log-magnitude spectrogram format that the BigVGAN vocoder expects.
     # The updated `reverse` function handles the denormalization from [-1,1] to the log scale.
-    log_mels_for_vocoder = model.mel.reverse(output_tensor)     # [1, n_mels, total_frames]
+    log_mels_for_vocoder = model.mel[1].reverse(output_tensor)     # [1, n_mels, total_frames]
     # This `log_mels_for_vocoder` is now in the format: log(clamp(magnitude, min=clip_val))
     # which matches BigVGAN's `spectral_normalize_torch` output/input requirement.
 
@@ -121,9 +121,8 @@ if __name__ == '__main__':
     parser.add_argument('ckpt', type=str)
     parser.add_argument('config', type=str)
     parser.add_argument('output', type=str)
-    parser.add_argument('-W', type=float, default=None)
-    parser.add_argument('--dither', type=float, default=0.0)
-
+    parser.add_argument('-W', type=float, default=1.5
+                       )
     args = parser.parse_args()
 
     with open(args.config) as f:
@@ -135,9 +134,11 @@ if __name__ == '__main__':
         model_configs['init_args']['cfg_weighting'] = args.W
 
     module_path, class_name = model_configs['class_path'].rsplit('.', 1)
-    module = import_module(module_path)
-    model = getattr(module, class_name).load_from_checkpoint(
-        args.ckpt, **model_configs['init_args'])
+    #module = import_module(module_path)
+    module = import_module("diff")  # or the correct relative path
+    model = getattr(module, "DiffusionLM").load_from_checkpoint(args.ckpt, **model_configs['init_args'])
+
+        
     model = model.cuda()
     model.eval()
 
@@ -188,5 +189,5 @@ if __name__ == '__main__':
     plt.title('Predicted Mel-Spectrogram')
     plt.tight_layout()
     
-    plt.savefig('/home/ubuntu/mel_plot.png', dpi=150)
-    plt.close()  # free memory / avoid overplotting
+    plt.savefig('/home/ubuntu/mel_plot.png')
+    plt.close()

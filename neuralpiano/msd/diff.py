@@ -208,13 +208,11 @@ class DiffusionLM(pl.LightningModule):
 
         self.log('loss', loss, prog_bar=True, sync_dist=True)
 
-        if batch_idx % 100 == 0:
+        if batch_idx % 10 == 0:
             self.log('mel/min', spec.min(), sync_dist=True)
             self.log('mel/max', spec.max(), sync_dist=True)
-
-            if context is not None:
-                self.log('context/min', context.min(), sync_dist=True)
-                self.log('context/max', context.max(), sync_dist=True)
+            self.log('z_t/std', z_t.std(), sync_dist=True)
+            self.log('noise_hat/std', noise_hat.std(), sync_dist=True)
                 
         return loss
 
@@ -223,6 +221,10 @@ class DiffusionLM(pl.LightningModule):
             self.mel[1].frozen = True
             self._scaler_frozen = True
             print(f"✅ Scaler frozen at epoch 1: min={self.mel[1].min.item():.3f}, max={self.mel[1].max.item():.3f}")
-    
+
     def configure_optimizers(self):
-        return optim.Adafactor(self.parameters(), lr=1e-3)
+        optimizer = torch.optim.AdamW(self.parameters(), lr=3e-4, weight_decay=1e-2)
+        scheduler = torch.optim.lr_scheduler.LinearLR(
+            optimizer, start_factor=0.1, total_iters=1000
+        )
+        return [optimizer], [scheduler]

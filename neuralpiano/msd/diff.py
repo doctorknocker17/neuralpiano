@@ -33,10 +33,10 @@ def log_snr2logas(log_snr: Tensor):
 
 class DiffusionLM(pl.LightningModule):
     def __init__(self,
-                 num_emb: int = 687,
+                 num_emb: int = 706,
                  output_dim: int = 128,
-                 max_input_length: int = 896,
-                 max_output_length: int = 257,
+                 max_input_length: int = 1024,
+                 max_output_length: int = 384,
                  emb_dim: int = 768,
                  dim_feedforward: int = 1536,
                  nhead: int = 8,
@@ -136,7 +136,9 @@ class DiffusionLM(pl.LightningModule):
         for t_idx in tqdm(range(T - 1, -1, -1), disable=not verbose):
             s_idx = t_idx - 1
             noise_hat = self.model(midi, z_t.repeat(
-                2, 1, 1), t[:, t_idx], context, dropout_mask=dropout_mask)
+                2, 1, 1), t[:, t_idx], context, dropout_mask=dropout_mask,
+                                  src_key_padding_mask=(midi == 0)
+                                  )
            
             noise_hat = torch.nan_to_num(noise_hat, nan=0.0, posinf=0.0, neginf=0.0)
             
@@ -206,7 +208,9 @@ class DiffusionLM(pl.LightningModule):
         z_t = z_t.clamp(-5.0, 5.0)
         
         noise_hat = self.model(midi, z_t, t, context,
-                               dropout_mask=dropout_mask)
+                               dropout_mask=dropout_mask,
+                               src_key_padding_mask=(midi == 0)
+                              )
         
         noise = torch.nan_to_num(noise, nan=0.0, posinf=0.0, neginf=0.0)
         noise_hat = torch.nan_to_num(noise_hat, nan=0.0, posinf=0.0, neginf=0.0)
@@ -215,7 +219,7 @@ class DiffusionLM(pl.LightningModule):
 
         self.log('loss', loss, prog_bar=True, sync_dist=True)
 
-        if batch_idx % 10 == 0:
+        if batch_idx % 50 == 0:
             self.log('mel/min', spec.min(), sync_dist=True)
             self.log('mel/max', spec.max(), sync_dist=True)
             self.log('z_t/std', z_t.std(), sync_dist=True)

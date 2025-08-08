@@ -28,7 +28,7 @@ model:
     nhead: 8
     num_layers: 8
     cfg_dropout: 0.1
-    cfg_weighting: 1.0
+    cfg_weighting: 2.0
     with_context: true
     dropout: 0.1
     layer_norm_eps: 1.0e-05

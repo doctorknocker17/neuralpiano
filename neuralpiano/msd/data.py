@@ -26,17 +26,17 @@ def get_padding_collate_fn(output_size: int):
 class ConcatData(pl.LightningDataModule):
     def __init__(self,
                  batch_size: int,
-                 midi_output_size: int = 2048,
+                 midi_output_size: int = None,
                  with_context: bool = True,
                  sample_rate: int = 44100,
-                 segment_length: int = 225792,
+                 segment_length: int = 196608,
                  musicnet_path: str = None,
                  maestro_path: str = None,
                  slakh_path: str = None,
                  guitarset_path: str = None,
                  urmp_wav_path: str = None,
                  urmp_midi_path: str = None,
-                 sampling_temperature: float = 0.75
+                 sampling_temperature: float = 1.0
                  ):
         super().__init__()
         self.save_hyperparameters()

@@ -44,7 +44,7 @@ model:
     #n_mels: 128                # Number of mel channels (128-band)
     #normalize: true           # Scale mel to [0,1] or similar
     max_input_length: 1024
-    max_output_length: 385     # = (segment_length / hop_length) + 1
+    max_output_length: 384     # = (segment_length / hop_length) + 1
 
     #pad: 0
     #power: 1.0

